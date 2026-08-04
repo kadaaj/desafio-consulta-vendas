@@ -1,16 +1,17 @@
 package com.devsuperior.dsmeta.services;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.time.LocalDate;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import com.devsuperior.dsmeta.dto.SaleReportDTO;
+import org.springframework.stereotype.Service;
 
 import com.devsuperior.dsmeta.dto.SaleMinDTO;
+import com.devsuperior.dsmeta.dto.SaleReportDTO;
+import com.devsuperior.dsmeta.dto.SaleSummaryDTO;
 import com.devsuperior.dsmeta.entities.Sale;
 import com.devsuperior.dsmeta.repositories.SaleRepository;
 
@@ -39,12 +40,17 @@ public class SaleService {
 				: LocalDate.parse(maxDate);
 
 		LocalDate min = minDate == null || minDate.isEmpty()
-				? today.minusYears(1)
+				? max.minusYears(1)
 				: LocalDate.parse(minDate);
 
 		String sellerName = name == null ? "" : name;
 
-		Page<Sale> result = repository.searchSales(min, max, sellerName, pageable);
+		Page<Sale> result = repository.searchSales(
+				min,
+				max,
+				sellerName,
+				pageable
+		);
 
 		return result.map(x -> new SaleReportDTO(
 				x.getId(),
@@ -54,5 +60,20 @@ public class SaleService {
 		));
 	}
 
+	public List<SaleSummaryDTO> getSummary(
+			String minDate,
+			String maxDate
+	) {
+		LocalDate today = LocalDate.now();
 
+		LocalDate max = maxDate == null || maxDate.isEmpty()
+				? today
+				: LocalDate.parse(maxDate);
+
+		LocalDate min = minDate == null || minDate.isEmpty()
+				? max.minusYears(1)
+				: LocalDate.parse(minDate);
+
+		return repository.salesSummary(min, max);
+	}
 }
